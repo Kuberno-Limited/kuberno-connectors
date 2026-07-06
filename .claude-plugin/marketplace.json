@@ -1,0 +1,11 @@
+{
+  "name": "kuberno",
+  "description": "Kuberno's official plugins for Claude.",
+  "owner": { "name": "Kuberno", "url": "https://kuberno.com" },
+  "plugins": [
+    {
+      "name": "kube",
+      "source": "./claude"
+    }
+  ]
+}
