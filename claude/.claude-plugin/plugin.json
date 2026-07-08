@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
-  "name": "kube",
-  "displayName": "Kube",
+  "name": "kube-by-kuberno",
+  "displayName": "Kube by Kuberno",
   "version": "1.0.0",
   "description": "Search and read entities, officers and appointments from Kube.",
-  "author": { "name": "Kuberno", "url": "https://kuberno.com" },
+  "author": { "name": "Kuberno Limited", "url": "https://kuberno.com" },
   "homepage": "https://kuberno.com",
   "repository": "https://github.com/Kuberno-Limited/kuberno-connectors",
   "license": "MIT",
-  "keywords": ["kube", "kuberno", "corporate", "entity", "entities", "officer", "registry", "companies"],
+  "keywords": ["entity data", "legal entity data", "governance", "compliance", "Co-sec", "entity", "officer", "directors", "appointments", "registry", "registrar"],
   "defaultEnabled": false
 }

@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "kube": {
+    "kube-by-kuberno": {
       "type": "http",
       "url": "https://mcp.kube-platform.com"
     }

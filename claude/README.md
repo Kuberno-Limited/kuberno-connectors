@@ -6,7 +6,7 @@ Connect Claude to your **Kube** corporate-registry and entity-management platfor
 
 A set of **read-only** tools over your Kube data:
 
-- **Search** — `search_parties` (entities + officers together), `search_entities` (with registrar / country / type / jurisdiction / SIC / business-unit filters).
+- **Search** — `search_parties` (entities + officers together), `search_entities` (with registrar / country / type / jurisdiction / SIC / business-unit filters), `search_officers` (with appointed-entity / registrar / appointment-type / nationality filters).
 - **Entities** — `get_entity`, `get_entity_appointments`, `get_entity_dates` (compliance dates), `get_entity_roles`.
 - **Officers** — `get_officer`, `get_officer_appointments`, `get_officer_roles`.
 - **Field catalogues** — `list_entity_fields`, `list_officer_fields` (so Claude uses your instance's own field labels).
@@ -22,7 +22,7 @@ Every result respects Kube's per-user access permissions and field-level redacti
 
 ```bash
 claude plugin marketplace add Kuberno-Limited/kuberno-connectors
-claude plugin install kube@kuberno
+claude plugin install kube-by-kuberno@kuberno
 ```
 
 Then enable it and complete the sign-in when prompted. (The plugin ships **disabled by default** because it connects to an external service — enable it explicitly.)

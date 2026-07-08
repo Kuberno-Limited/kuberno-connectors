@@ -8,7 +8,7 @@ The Kube plugin for Claude Code and Cowork lives in [`claude/`](./claude). Insta
 
 ```bash
 claude plugin marketplace add Kuberno-Limited/kuberno-connectors
-claude plugin install kube@kuberno
+claude plugin install kube-by-kuberno@kuberno
 ```
 
 See [`claude/README.md`](./claude/README.md) for the full tool list, requirements, and example prompts.
