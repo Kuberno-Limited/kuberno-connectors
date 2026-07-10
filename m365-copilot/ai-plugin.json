@@ -1,0 +1,22 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "Kube by Kuberno",
+  "namespace": "kube-by-kuberno",
+  "description_for_human": "Search and read entities, officers and appointments from Kube.",
+  "description_for_model": "Read-only access to the user's Kube corporate-registry and entity-management data over the Model Context Protocol. Use it whenever the user asks about legal entities, officers/directors, appointments, compliance dates, or roles. Provides search across entities and officers and detailed lookups for a given entity or officer. Every result is scoped to the signed-in user's Kube permissions and field-level redaction; it cannot create, change, or delete data.",
+  "legal_info_url": "https://kuberno.com/legal-notices/",
+  "privacy_policy_url": "https://kuberno.com/legal-notices/",
+  "runtimes": [
+    {
+      "type": "RemoteMCPServer",
+      "auth": {
+        "type": "OAuthPluginVault",
+        "reference_id": "NTU4MzQzZGMtMTMxNC00YzZiLThjMzMtYWU1N2JiNWFmNTU1IyMxY2U1ZmM0Ni03MzNhLTQ5NjMtODRhMi0yZmQwODY2NTk5ZGI="
+      },
+      "spec": {
+        "url": "https://mcp.kube-platform.com"
+      }
+    }
+  ]
+}
