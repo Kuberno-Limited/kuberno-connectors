@@ -7,8 +7,8 @@ Connect **Microsoft 365 Copilot** to your **Kube** corporate-registry and entity
 A **read-only** agent over your Kube data, powered by the Kube remote MCP server:
 
 - **Search** — entities and officers, with filters (registrar / country / type / jurisdiction, appointment type, nationality, and more).
-- **Entities** — details, appointments, compliance dates, and roles for a given entity.
-- **Officers** — details, appointments, and roles for a given officer.
+- **Entities** — details, appointments, compliance dates, roles, contacts, addresses, meetings, registrations, activities, alternates, and your own user defined fields.
+- **Officers** — details, appointments, roles, alternates, external appointments at companies outside Kube, committees, contacts, addresses, and your own user defined fields.
 - **Field catalogues** — so Copilot uses your instance's own field labels.
 
 Every result respects Kube's per-user access permissions and field-level redaction — the agent never returns anything you couldn't already see in Kube. It is strictly read-only: it cannot create, change, or delete data.

@@ -3,10 +3,116 @@
   "schema_version": "v2.4",
   "name_for_human": "Kube by Kuberno",
   "namespace": "kube-by-kuberno",
-  "description_for_human": "Search and read entities, officers and appointments from Kube.",
-  "description_for_model": "Read-only access to the user's Kube corporate-registry and entity-management data over the Model Context Protocol. Use it whenever the user asks about legal entities, officers/directors, appointments, compliance dates, or roles. Provides search across entities and officers and detailed lookups for a given entity or officer. Every result is scoped to the signed-in user's Kube permissions and field-level redaction; it cannot create, change, or delete data.",
+  "description_for_human": "Search and read entities, officers and the records held on them in Kube.",
+  "description_for_model": "Read-only access to the user's Kube corporate-registry and entity-management data over the Model Context Protocol. Use it whenever the user asks about legal entities or officers/directors, and for any of the records held on them: an entity's or officer's appointments, roles, contacts, addresses, alternates and user defined fields; an entity's compliance dates, meetings, registrations and activities; an officer's committees and external appointments; and the activity workload owned by the signed-in user or their teams, across every entity they can see. Provides search across entities and officers, detailed lookups for a given entity or officer, and field catalogues that map this instance's own UI labels to stable field keys. Every result is scoped to the signed-in user's Kube permissions and field-level redaction; it cannot create, change, or delete data.",
   "legal_info_url": "https://kuberno.com/legal-notices/",
   "privacy_policy_url": "https://kuberno.com/legal-notices/",
+  "functions": [
+    {
+      "name": "search_parties",
+      "description": "Primary name search across both entities and officers in one call, ranked by relevance; use first when unsure whether the user means an entity or an officer."
+    },
+    {
+      "name": "search_entities",
+      "description": "Search entity records (companies, LLPs, trusts, etc.), with optional filters for registrar, registrar country, entity type, jurisdiction, SIC code, classification, business unit, division and entity group."
+    },
+    {
+      "name": "get_entity",
+      "description": "Get the full profile for a single entity by its E|-prefixed KubeRef, optionally including the additional Details fields."
+    },
+    {
+      "name": "get_entity_appointments",
+      "description": "List the officer appointments on an entity (directors, secretaries, etc.), optionally filtered to active or resigned."
+    },
+    {
+      "name": "get_entity_dates",
+      "description": "List the compliance dates recorded on an entity."
+    },
+    {
+      "name": "get_entity_roles",
+      "description": "List the role appointments on an entity (service roles such as auditor or accountant), optionally filtered to active or ended."
+    },
+    {
+      "name": "get_entity_contacts",
+      "description": "List the contact records held against an entity."
+    },
+    {
+      "name": "get_entity_addresses",
+      "description": "List an entity's address book."
+    },
+    {
+      "name": "get_entity_meetings",
+      "description": "List the meetings recorded against an entity."
+    },
+    {
+      "name": "get_entity_registrations",
+      "description": "List an entity's registrations."
+    },
+    {
+      "name": "get_entity_activities",
+      "description": "List the activities recorded against an entity, with optional filters for activity category, activity type, completion state and due-date range."
+    },
+    {
+      "name": "get_entity_alternates",
+      "description": "List the appointments at an entity that are held by an alternate, optionally filtered to active or resigned."
+    },
+    {
+      "name": "get_entity_udfs",
+      "description": "List the user defined field values recorded against an entity, optionally restricted to the Field, Group or List scope."
+    },
+    {
+      "name": "search_officers",
+      "description": "Search officer records (directors, secretaries, PSCs), with optional filters for appointed entity, registrar, country, appointment type, directorship type and nationality."
+    },
+    {
+      "name": "get_officer",
+      "description": "Get the detail for a single officer by their O|-prefixed KubeRef, including their per-registrar profiles."
+    },
+    {
+      "name": "get_officer_appointments",
+      "description": "List an officer's appointments — the entities they are appointed to — optionally filtered to active or resigned."
+    },
+    {
+      "name": "get_officer_roles",
+      "description": "List an officer's entity-level role appointments (service roles such as auditor or accountant), optionally filtered to active or ended."
+    },
+    {
+      "name": "get_officer_alternates",
+      "description": "List the appointments an officer holds as an alternate, optionally filtered to active or resigned."
+    },
+    {
+      "name": "get_officer_external_appointments",
+      "description": "List the appointments an officer holds at companies outside this Kube instance, optionally filtered to active or resigned."
+    },
+    {
+      "name": "get_officer_committees",
+      "description": "List the committees an officer sits on, optionally filtered to active or ended."
+    },
+    {
+      "name": "get_officer_contacts",
+      "description": "List the contact records held against an officer."
+    },
+    {
+      "name": "get_officer_addresses",
+      "description": "List an officer's address book."
+    },
+    {
+      "name": "get_officer_udfs",
+      "description": "List the user defined field values recorded against an officer, optionally restricted to the Field, Group or List scope."
+    },
+    {
+      "name": "list_entity_fields",
+      "description": "List the entity fields queryable through this connector, each with this instance's own UI label, to resolve a user's wording to a stable field key."
+    },
+    {
+      "name": "list_officer_fields",
+      "description": "List the officer fields queryable through this connector, each with this instance's own UI label, to resolve a user's wording to a stable field key."
+    },
+    {
+      "name": "get_my_activities",
+      "description": "List the signed-in user's own activity workload — one entity or every entity they can see — with optional filters for team, party, activity category, activity type, jurisdiction, status, filing reference, several date ranges and open/overdue/complete state."
+    }
+  ],
   "runtimes": [
     {
       "type": "RemoteMCPServer",
@@ -15,8 +121,1370 @@
         "reference_id": "NTU4MzQzZGMtMTMxNC00YzZiLThjMzMtYWU1N2JiNWFmNTU1IyMxY2U1ZmM0Ni03MzNhLTQ5NjMtODRhMi0yZmQwODY2NTk5ZGI="
       },
       "spec": {
-        "url": "https://mcp.kube-platform.com"
-      }
+        "url": "https://mcp.kube-platform.com",
+        "mcp_tool_description": {
+          "tools": [
+            {
+              "name": "search_parties",
+              "description": "PRIMARY search across Entities (companies, LLPs, trusts, etc.) AND Officers (directors, secretaries, PSCs)\nin a single call, filtered to records the signed-in user can see. Use this FIRST when you are not sure\nwhether the user means an entity or an officer, or to quickly find a party by name — it mirrors the Kube\nglobal search box.\n\nReturns very cut-down rows to keep context small:\n- `KubeRef` — stable id, prefixed `E|` for entities or `O|` for officers.\n- `Type` — `Entity` or `Officer`.\n- `Name`, `Active` — display name; whether active in Kube.\n- `Registrars` — the registrar(s) this party is recorded under (the registrar for an entity, a comma-joined list for an officer); a short line to help tell same-named hits apart.\n\n`query` matches entity and officer names (AND across whitespace words) — and, for entities, also\nIDENTIFIERS: the registrar-issued entity/registration number, the Kube company code, and a pasted\nE|/O|-prefixed KubeRef. A pasted company number like `09876543` resolves in this one call — do not\nreport \"not found\" for an identifier without trying it here first. Strip company suffixes (Ltd,\nLimited, PLC, LLP, Inc, Corp, GmbH, S.A., Pty, etc.) from entity names — they reduce recall. Officer\nrecords do not store personal titles / honorifics (Mr, Mrs, Dr, Sir, etc.), so omit them when searching\nfor a person; but such words can be a genuine part of a company name (e.g. 'Dr. Martens', 'Mr Kipling'),\nso keep them when the target may be a company, and retry with the original term included if a search\nreturns nothing. Results are ranked by relevance, scored over a capped candidate set per party type — so\n`TotalItems` can exceed the rows paging can return; if you hit an empty page before reaching `TotalItems`,\nnarrow `query` instead of paging further. For full entity detail, follow up with `get_entity`\nusing an `E|` KubeRef.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "description": "Name or identifier to search for; words are AND-ed. Matches entity and officer names, entity/registration numbers, company codes, and pasted KubeRefs.",
+                    "type": "string"
+                  },
+                  "active": {
+                    "description": "true (default) = active parties only; false = also include inactive parties. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "query"
+                ]
+              }
+            },
+            {
+              "name": "search_entities",
+              "description": "Search Entity records (companies, LLPs, trusts, etc.) in this Kube instance.\nResults are server-side filtered to records the signed-in user can see — no client-side filtering needed.\n\nSearch tips:\n- `query` matches names — current name, previous names, and trading names. All words must match — `Acme Holdings` requires both.\n- Strip company suffixes (Ltd, Limited, PLC, LLP, Inc, Corp, GmbH, S.A., Pty, etc.) from `query` — they are stripped from the indexed data, so including them reduces recall.\n- Everything that is not a name has its own parameter: registrar, registrar country, entity type, classification, jurisdiction, SIC code, business unit, division, entity group, registrar status, company status, responsible owner, tags, audit status, client name, client number. Non-name terms in `query` return zero results.\n- Every filter parameter takes a LIST. Values within one parameter are OR-ed, and the parameters are AND-ed: `entityType: [\"LLP\", \"Private Limited Company\"]` with `jurisdiction: [\"England and Wales\"]` means LLPs or private limited companies, in England and Wales.\n- Every filter matches on SUBSTRING, case-insensitive, except `companyStatus` and `auditStatus`, which take one of a fixed set of values and name the valid ones if you get it wrong.\n- A filter you are not permitted to use is REFUSED, not ignored: the error names the parameter, and retrying without it is the fix.\n\nResult fields (optional fields may be absent; null fields are omitted from JSON):\n- `KubeRef` — stable cross-instance id, prefixed `E|` (e.g. `E|6FE4BF`).\n- `Name`, `Active` — current registered name; whether active in Kube.\n- `CompanyCode` — short code shown alongside the name in Kube UI.\n- `EntityNumber` — the registrar-issued entity/registration number (answer listing\n  questions like \"our companies with their company numbers\" straight from these rows,\n  no per-entity fetch needed).\n- `Registrar`, `RegistrarCountry`, `Jurisdiction` — e.g. `Companies House`, `United Kingdom`, `South Africa`.\n- `Status` — the entity's status in Kube, e.g. `Active`, `InactiveClosed`. This is what `companyStatus` filters, NOT the registrar's own status, which `registrarStatus` filters and which is not returned here.\n- `EntityType` — e.g. `Private Limited Company`, `LLP`.\n- `RedactedProperties` — names of fields withheld on that record; absent when nothing is withheld.\n\nWithheld vs not-recorded: a field is null/absent either because no value is recorded, or because it was withheld. Distinguish them via `RedactedProperties` — a field named there was withheld and may well hold a value, for any of several reasons this connector does not report and you should not guess at; a null field NOT listed there simply has no recorded value.\n\nClassification, business unit, division, entity group, SIC code, registrar status, responsible owner, tags, audit status and client name/number are filterable but not returned per-result — read them off get_entity.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "description": "Name search; AND across whitespace tokens. Omit for all visible entities.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = active entities only; false = also include inactive entities. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 10, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 10
+                  },
+                  "registrarCountry": {
+                    "description": "Registrar's country: full name (substring, e.g. 'United Kingdom') or ISO Alpha-2/3 code (exact, e.g. 'GB', 'GBR').",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrar": {
+                    "description": "Registrar (substring). Either the bare name ('Companies House') or the 'Name [Country]' form the Kube dropdown shows.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "entityType": {
+                    "description": "Entity type (e.g. 'Private Limited Company', 'LLP').",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "classification": {
+                    "description": "Classification.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "jurisdiction": {
+                    "description": "Jurisdiction (e.g. 'England and Wales').",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "sicCode": {
+                    "description": "SIC code (Standard Industrial Classification).",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "businessUnit": {
+                    "description": "Business unit.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "division": {
+                    "description": "Division.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "entityGroup": {
+                    "description": "Entity group.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrarStatus": {
+                    "description": "The registrar's own status for the entity, as the registrar words it (e.g. 'Active', 'Dissolved'); substring. Distinct from `companyStatus`, which is the entity's status inside Kube.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "companyStatus": {
+                    "description": "The entity's status inside Kube: 'Active', 'Inactive - closed', 'Inactive - sold', 'Inactive - pending', 'Inactive - closed and merged', 'Preparing for incorporation', 'Ready for incorporation', 'Processing Incorporation'. AND-ed with `active`, so an inactive status needs `active: false` too.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "responsibleOwner": {
+                    "description": "Responsible owner, by display name or email address; substring. Never a user id.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "tags": {
+                    "description": "Tags on the entity; substring on the tag's name. An entity matches if it carries any of them.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "auditStatus": {
+                    "description": "Finance audit status: 'Audited', 'Unaudited' or 'Dormant'.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "clientName": {
+                    "description": "Client name; substring. Matches the entity's CURRENT client only, not one it used to belong to.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "clientNumber": {
+                    "description": "Client number; substring. Matches the entity's CURRENT client only, not one it used to belong to.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  }
+                }
+              }
+            },
+            {
+              "name": "get_entity",
+              "description": "Get full detail for a single Entity by its KubeRef (E|-prefixed, e.g. E|6FE4BF), filtered to what the\nsigned-in user may see.\n\nReturns the Profile fields by default: KubeRef, Name, Active, EntityNumber, BusinessNumber, Status,\nEntityType, Registrar, Country, Jurisdiction, Classification, EntityGroup, BusinessUnit, Division,\nEmailAddress, IncorporatedOn, CessationDate, LastSoldOn, RegistrarStatus, GoverningLaw, ParentCompany,\nParentCompanyNumber, ParentCompanyKubeRef, RegisteredOfficeAddress, CorrespondenceAddress,\nRegisteredInspectionAddress, Tags, NatureOfBusiness (NAICS/SIC codes — Code + Description),\nPreviousNames (Name + period), TradingNames.\n\nParent company is the one recorded on the entity's Profile tab (name and/or registry number).\nParentCompany is the linked entity's name when the number matches an entity you may see — in which case\nParentCompanyKubeRef is its KubeRef, usable with this tool — otherwise the free-text name as recorded.\nA parent recorded only under Relationships is a separate corporate-relationship record and is not\nreturned here.\n\nOther parts of an entity's record have their own tools: get_entity_appointments (officer appointments),\nget_entity_dates (compliance dates), get_entity_roles (service-role appointments such as auditor),\nget_entity_contacts (contact records), get_entity_addresses (address book), get_entity_meetings\n(meetings the entity held, as minuted), get_entity_registrations (branch, foreign and tax-only\nregistered presences), get_entity_activities (tracked tasks and filings with due dates),\nget_entity_alternates (appointments held by an alternate) and get_entity_udfs (user defined field\nvalues).\n\nSet `fetchAdditionalDetails` = true to also return the Details fields: EntityCode, LeiNumber, Overview,\nBusinessActivity, BusinessReportingGroup, ApiConnection, RiskFactors, CountryCode, ResponsibleOwner,\nAcquisitionDate, AccessCategories. When false they are omitted — ignore them.\n\nWithheld vs not-recorded: a field is null/absent either because no value is recorded, or because it was\nwithheld. `RedactedProperties` lists the names of the fields that were withheld — each may well hold a\nvalue, for any of several reasons this connector does not report and you should not guess at, so do not\ntell the user they lack a permission. A null field NOT listed there simply has no recorded value.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "fetchAdditionalDetails": {
+                    "description": "true to also return the additional Details-tab fields; default false.",
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_appointments",
+              "description": "List the officer appointments on an entity (directors, secretaries, etc.) — Entity > People > Appointments.\nRead-only and filtered to what the signed-in user may see.\n\nFor role questions (\"who are the directors of X?\"), filter server-side with `isDirector: true` (semantic\nflag, robust to renamed appointment types) or `appointmentType` (exact type name) — that keeps the answer\ncomplete beyond one page instead of scanning mixed rows.\n\n`query` matches this entity's own name and the appointee's forenames and surname — the same two columns the\ntab's keyword box searches; AND across whitespace tokens, substring, case-insensitive. It does not match\nAppointmentType or any date.\n\nPer appointment: Name (appointee), EntityKubeRef (E| — this entity) and OfficerKubeRef (O| — the appointee,\nfollow up with get_officer), IsOfficerAccessible, OfficerAppointmentId (stable appointment id), AppointmentType,\nIsDirector, AppointmentGrouping, AppointedOn, ResignedOn.\n\nA row may name an appointee you cannot open. It is still listed, matching how Kube shows that appointee as\nplain text rather than a link: the row keeps its Name but has NO OfficerKubeRef, carries\nIsOfficerAccessible: false, and names OfficerKubeRef, nulled, in its RedactedProperties. Such a row cannot be\nfollowed up with get_officer, and this tool returns nothing else about that appointee.\nIsOfficerAccessible is true for an appointee you can open.\n\nPaged: Items plus Page, PageSize, TotalItems. Withheld date fields are nulled and named in each row's\nRedactedProperties. Returns an empty page when this section is not returned to you on this entity, and\nequally when the entity simply has no appointments — a withheld section says so explicitly, so a bare empty\npage means nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "active": {
+                    "description": "true (default) = active appointments only, matching the tab's ticked active-only checkbox; false = also include resigned ones. A future-dated resignation still counts as active; a resignation with no date recorded counts as resigned now. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "appointmentType": {
+                    "description": "Exact appointment-type names (e.g. 'Director', 'Secretary'); any one matches. Omit for all types.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "isDirector": {
+                    "description": "true = directorship appointments only (semantic flag on the appointment type); false = non-directorships; omit for all.",
+                    "type": "boolean",
+                    "default": null
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches this entity's name and the appointee's forenames and surname. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_dates",
+              "description": "List the compliance dates on an entity — Entity > Overview > Dates. Read-only and filtered to what the\nsigned-in user may see.\n\nPer date: DateType plus the applicable date fields — DueOn always applies; then either\nPeriodStartOn/PeriodEndOn, or LastMadeUpTo/NextMadeUpTo, or LastDone, depending on the date type.\n\n`query` matches the date type's own name only (e.g. 'Annual return due') — the same single column the tab's\nkeyword box searches; AND across whitespace tokens, substring, case-insensitive. There is nothing else on a\ndate row to search.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the entity but lack\npermission to view its date data, and equally when the entity simply has no compliance dates recorded — a\nwithheld section says so explicitly, so a bare empty page means nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "active": {
+                    "description": "true (default) = dates still in use only, matching the tab's ticked active-only checkbox; false = also include ones that have since been retired. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches the date type's own name only (e.g. 'Annual return due'). Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_roles",
+              "description": "List the role appointments on an entity (service roles such as auditor or accountant) — Entity > People >\nRoles. Read-only and filtered to what the signed-in user may see.\n\n`query` matches this entity's own name and an OFFICER appointee's forenames and surname — the same columns\nthe tab's keyword box searches; AND across whitespace tokens, substring, case-insensitive. It does NOT match\nan external-party appointee's name, matching the tab's own box.\n\nPer role: Name (appointee), EntityKubeRef (E| — this entity), and the appointee ref — OfficerKubeRef (O|,\nfollow up with get_officer) or ExternalPartyKubeRef (P|), IsOfficerAccessible, RoleAppointmentType,\nAppointmentGrouping, AppointedFrom, AppointedTo.\n\nA row may name an OFFICER appointee you cannot open. It is still listed, matching how Kube shows that\nappointee as plain text rather than a link: the row keeps its Name but has NO OfficerKubeRef, carries\nIsOfficerAccessible: false, and names OfficerKubeRef, nulled, in its RedactedProperties. Such a row cannot be\nfollowed up with get_officer, and this tool returns nothing else about that appointee.\nIsOfficerAccessible is true for an officer appointee you can open, and is absent on an external-party row —\nthat appointee is not an officer, so the flag has nothing to describe and ExternalPartyKubeRef always stands.\n\nPaged: Items plus Page, PageSize, TotalItems.\nReturns an empty page when this section is not returned to you on this entity, and equally when the entity\nsimply has no roles — a withheld section says so explicitly, so a bare empty page means nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "active": {
+                    "description": "true (default) = active roles only, matching the tab's ticked active-only checkbox; false = also include ended ones. A future-dated end still counts as active; an ended role with no date recorded counts as ended now. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches this entity's name and an OFFICER appointee's forenames and surname — NOT an external-party appointee's name. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_contacts",
+              "description": "List the contact records held against an entity — Entity > Contacts. Read-only and filtered to what the\nsigned-in user may see.\n\nA contact record is a named point of contact filed against the entity (for example a company secretarial\ncontact, an agent or a billing contact), with its own phone, email and address details. These are NOT\nofficer appointments or role appointments — for who holds office at the entity use get_entity_appointments\nor get_entity_roles.\n\nPer contact: ContactType (the contact type configured in this Kube instance), Name, Details, Telephone,\nEmailAddress, Address (the contact's own address, as a single line).\n\n`query` matches ContactType, Name, Details, Telephone and EmailAddress — not the address; AND across\nwhitespace tokens, substring, case-insensitive.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the entity but lack\npermission to view its contact data, and equally when the entity simply has no contact records — a withheld\nsection says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches ContactType, Name, Details, Telephone and EmailAddress — not the address. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_addresses",
+              "description": "List an entity's address book — Entity > Addresses. Read-only and filtered to what the signed-in user may\nsee.\n\nThese are the entity's additional named address records (for example a trading address or a records\noffice), each filed under its own AddressName. They are NOT the registered office, correspondence or\nregistered inspection addresses — those are Profile fields already returned by get_entity, so do not call\nthis tool for them.\n\nPer address: AddressName, then the address components BuildingNameNumber, Street, Area, PostTown,\nCountyRegion, Postcode, Country, plus EffectiveFrom (the date the address takes effect, when recorded).\n\n`query` matches AddressName and every address component (BuildingNameNumber, Street, Area, PostTown,\nCountyRegion, Postcode, Country); AND across whitespace tokens, substring, case-insensitive.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the entity but lack\npermission to view its address data, and equally when the entity simply has no additional address records — a\nwithheld section says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches AddressName and every address component (BuildingNameNumber, Street, Area, PostTown, CountyRegion, Postcode, Country). Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_meetings",
+              "description": "List the meetings recorded against an entity — Entity > Meetings. Read-only and filtered to what the\nsigned-in user may see.\n\nA meeting is one that this entity held, as minuted in Kube. Per meeting: MeetingType (the meeting type\nconfigured in this Kube instance, e.g. 'Annual general meeting', 'Board meeting') and DateOfMeeting.\nNewest first. These are NOT compliance deadlines or filing due dates — for those use get_entity_dates.\n\nIsAgmRequired is a property of the ENTITY, not of any meeting. It is the entity's 'AGM required' setting,\nreturned once alongside the page rather than on each row, and says whether the entity is required to hold\nan annual general meeting — not whether one has been held. Read the meeting rows for that.\n\nPaged: Items plus Page, PageSize, TotalItems — and IsAgmRequired beside them. Returns an empty Items page\nwhen this section is not returned to you on this entity, and equally when the entity simply has no\nmeetings recorded — a withheld section says so explicitly, so a bare empty page means nothing is recorded.\nIsAgmRequired is governed partly independently of the rows, so it can be returned on an empty page or\nwithheld from a full one; when withheld it is null and named in RedactedProperties.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "query": {
+                    "description": "Free text over the MEETING TYPE's name only, which is all the tab's search box matches; AND across whitespace tokens. There is nothing else on a meeting row to search.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_registrations",
+              "description": "List an entity's registrations — Entity > Registrations. Read-only and filtered to what the signed-in user\nmay see.\n\nA registration is a registered presence this entity holds in a jurisdiction — a branch, a foreign\nregistration or a tax-only registration — held in Kube as a child record of the entity with its own\nregistrar, registration number, status and address. These are NOT the entity's own profile: for the\nentity's own name, number, registrar and status use get_entity. Nor are they other entities: a registration\nbelongs to this entity and has no separate entity record.\n\nPer registration: KubeRef (R|-prefixed — it identifies this registration row and is NOT accepted by\nget_entity), Name, Country, Jurisdiction, Registrar, RegistrationNumber, RegisteredDate,\nStatus, RegisteredOfficeAddress, Category (e.g. 'Branch', 'Foreign registration', 'Tax only'),\nIsCompanyRegistered, IsTaxRegistered.\n\nTwo fields switch source on whether the registration is company-registered, matching how Kube displays the\nrow. Where it is, Status is the registrar's own status for the registration and RegisteredOfficeAddress is its\nregistered office. Where it is not, Status is the registration's status within Kube and\nRegisteredOfficeAddress holds its correspondence address instead. IsCompanyRegistered reports that state, but\nonly when it is returned at all: a null IsCompanyRegistered does NOT mean the registration is not\ncompany-registered and does not tell you which of the two you have, so report Status as the registration's\nstatus and RegisteredOfficeAddress as an address recorded for it, without asserting which.\n\nIsCompanyRegistered and IsTaxRegistered are returned only where the company- and tax-registration capability is\nenabled for this Kube instance; otherwise both are permanently null, regardless of the underlying data.\n\nCountry, Jurisdiction, Registrar, RegisteredOfficeAddress, Category, IsCompanyRegistered and IsTaxRegistered are\nalso each individually governed per registration: a field withheld on that row is nulled and named in the\nrow's RedactedProperties, distinct from the instance-wide IsCompanyRegistered/IsTaxRegistered capability above,\nwhich never appears in RedactedProperties. A field can be null for either reason — RedactedProperties tells\nyou which.\n\nServer-side filters, all combinable and AND-ed together; each list's own values OR together. Prefer them over\npaging through everything and filtering yourself.\n- `query` — free text over the registration's name, number, code, KubeRef, trading and previous names, and its\n  parent entity's name; AND across whitespace tokens.\n- `name` / `registrationNumber` — substring matches on those two columns specifically.\n- `registrar` — substring; accepts either the bare registrar name or the `Name [Country]` form the Kube\n  dropdown shows.\n- `country` / `jurisdiction` / `registrarStatus` — substring. `registrarStatus` is the registrar status\n  CATEGORY, which is what the tab's dropdown lists, NOT the finer-grained Status a row reports.\n- `status` — the registration's status inside Kube, e.g. 'Active', 'Inactive - closed'. AND-ed with `active`,\n  so an inactive status needs `active: false` too.\n- `registrationType` — 'Company' and/or 'Tax'; a registration matches if it is of ANY type listed.\n- `registeredFrom` / `registeredTo` — inclusive bounds on the registration date. A registration with no date\n  recorded is excluded by either bound.\n\nPaged: Items plus Page, PageSize, TotalItems. Registrations carry their own record-level access separately\nfrom the entity, so a registration you may not see is omitted while others on the same entity are returned.\nReturns an empty page when this section is not returned to you on this entity, and equally when the entity\nsimply has no registrations — a withheld section says so explicitly, so a bare empty page means nothing is\nrecorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "active": {
+                    "description": "true (default) = active registrations only, matching the tab's ticked active-only checkbox; false = also include inactive ones. Active here is the registration's Kube-side status, which is not necessarily the registrar Status the row reports. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "query": {
+                    "description": "Free text over the registration's own columns and its parent entity's name; AND across whitespace tokens.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "name": {
+                    "description": "Registration name (substring).",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrationNumber": {
+                    "description": "Registration number (substring); matches the same value the row reports as RegistrationNumber.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrar": {
+                    "description": "Registrar (substring). Either the bare name ('Companies House') or the 'Name [Country]' form the Kube dropdown shows.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "country": {
+                    "description": "Country (substring), e.g. 'United Kingdom'.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "jurisdiction": {
+                    "description": "Jurisdiction (substring), e.g. 'England and Wales'.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrarStatus": {
+                    "description": "Registrar status CATEGORY (substring) — the grouping the tab's dropdown lists, not the finer Status a row reports.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "status": {
+                    "description": "The registration's status inside Kube: 'Active', 'Inactive - closed', 'Inactive - sold', 'Inactive - pending', 'Inactive - closed and merged', 'Preparing for incorporation', 'Ready for incorporation', 'Processing Incorporation'. AND-ed with `active`.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrationType": {
+                    "description": "Registration type: 'Company', 'Tax', or both. A registration matches if it is of ANY type listed.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registeredFrom": {
+                    "description": "Earliest registration date, inclusive; omit for no lower bound. Registrations with no date recorded are excluded.",
+                    "type": "string",
+                    "format": "date-time",
+                    "default": null
+                  },
+                  "registeredTo": {
+                    "description": "Latest registration date, inclusive; omit for no upper bound. Registrations with no date recorded are excluded.",
+                    "type": "string",
+                    "format": "date-time",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_activities",
+              "description": "List the activities recorded against an entity — Entity > Activities. Read-only and filtered to what the\nsigned-in user may see.\n\nAn activity is a piece of work tracked in Kube: a task or a statutory filing, with an owner, a team, a due\ndate and a done/not-done state. These are NOT the entity's statutory compliance dates — for those (annual\nreturn due, accounts made up to, and the other recurring deadlines on the entity's Dates tab) use\nget_entity_dates. The distinction is that an activity is assignable work someone completes, while a\ncompliance date is a deadline the entity carries whether or not any work has been logged against it. Use\nthis tool for \"what is outstanding / who is doing it / what is overdue\"; use get_entity_dates for \"when is\nX due\".\n\nResults span the entity AND its registrations, matching the entity's Activities tab — an activity recorded\nagainst a registration is included here, so do NOT also call this per registration or you will double-count.\nRegistrations carry their own access permissions, so only activities of registrations you can see are\nincluded. Set `entityOnly: true` to restrict to the entity's own activities and exclude its registrations —\nthe tab itself has no equivalent toggle.\n\nEvery activity on the entity is returned whoever owns it. When the question is about the caller's OWN\nworkload rather than a named company's activities (\"my confirmation statements\", \"what's outstanding for\nme?\"), use get_my_activities — that one covers only what the user or their teams own, spans every entity\nthey can see, and is the one whose ActivityId feeds the guided confirmation-statement completion.\n\nPer activity: Activity (its name), Category (e.g. 'Filing', 'Compliance'), Type, DueOn, IsComplete, Team, Owner\n(the responsible user's display name, or 'KAIA' for an activity KAIA owns), plus PartyName and EntityKubeRef.\nType is the filing type for a statutory filing and the activity type for anything else — whichever the activity\ncarries, matching the single Type column Kube shows.\n\nPartyName and EntityKubeRef identify the party the activity actually belongs to, which is NOT always the entity\nyou queried: for an activity recorded against one of its registrations they are the registration's name and its\n`R|` ref. An `R|` ref is not accepted by get_entity — match it against the KubeRef values from\nget_entity_registrations on the same entity to identify which registration it is. Where the activity's party is\nan officer or an external party rather than an entity, PartyName is that party's name and EntityKubeRef is\nabsent.\n\nOptional server-side filters, all combinable and AND-ed together (each list's own values OR together) —\nprefer them over paging through everything and filtering yourself:\n- `active` — true (the DEFAULT) = active only, matching the tab's ticked active-only checkbox, which counts a\n  completed activity as inactive; false also includes the completed ones.\n- `isComplete` — the grid's separate Complete filter: true = completed only, false = outstanding only, omitted\n  = no completion filter. It AND-s with `active`, so asking for completed work needs `active: false` too.\n- `activityCategory` / `activityType` — category and type names as configured in this instance (substring);\n  any one matches. Read the values off returned rows rather than guessing; a name that does not exist yields an\n  empty page rather than an error. Both match the same values a row returns, so a filing type name works for\n  `activityType`, and 'Filing' works for `activityCategory` — it selects the filings that read 'Filing'\n  because they carry a filing type rather than a configured category.\n- `dueOnOrAfter` / `dueOnOrBefore` — inclusive bounds on DueOn. Combine both for a window ('open filings\n  due this quarter' is `complete: false` plus the two bounds). An activity with no recorded due date is\n  excluded by either bound.\n- `team` — team name (substring); any one matches. Omit for every team.\n- `party` — party name (substring); any one matches. Matches the same value the row reports as PartyName, so a\n  registration's activity is matched against the registration's name, not the entity's.\n- `isOverdue` — true = past due and not yet complete only; false = everything else; omit for no filter on this.\n- `filingReference` — filing reference (substring); any one matches. Only ever set on a statutory filing, so\n  an activity that is not one cannot match.\n- `filingPreparedOnOrAfter` / `filingPreparedOnOrBefore` — inclusive bounds on a statutory filing's prepared\n  date. An activity with no recorded prepared date is excluded by either bound.\n- `filingSubmittedOnOrAfter` / `filingSubmittedOnOrBefore` — inclusive bounds on a statutory filing's\n  submitted date. An activity with no recorded submitted date is excluded by either bound.\n- All four of those, and `dueOnOrAfter` / `dueOnOrBefore`, are DATES, not date-times — send 'YYYY-MM-DD'.\n  The whole of a bounding day is included at both ends.\n\nOrdered by due date, soonest first, with undated activities first. Paged: Items plus Page, PageSize,\nTotalItems — TotalItems counts the rows matching your filters, not the entity's whole activity list.\nReturns an empty page when you may see the entity but lack permission to view its activity data, and equally\nwhen the entity simply has no activities recorded, or none matching your filters — a withheld section says so\nexplicitly, so a bare empty page means nothing is recorded. An activity may name several parties, and it is\nwithheld entirely when the first of them is a party you cannot access, even where this entity is one of the\nothers.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "active": {
+                    "description": "true (default) = active activities only, matching the tab's ticked active-only checkbox, which counts a completed activity as inactive; false = also include completed ones. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "isComplete": {
+                    "description": "The grid's separate Complete filter: true = completed only, false = outstanding only, omit to not filter on completion. AND-ed with `active`, so completed activities need `active: false, isComplete: true` — `active` alone already excludes them. Same meaning as isComplete on get_my_activities.",
+                    "type": "boolean",
+                    "default": null
+                  },
+                  "activityCategory": {
+                    "description": "Activity-category names (e.g. 'Filing') as configured in this instance (substring); any one matches. Omit for all categories.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "activityType": {
+                    "description": "Activity-type names (e.g. 'Annual return') as configured in this instance (substring); any one matches. Omit for all types.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "dueOnOrAfter": {
+                    "description": "Earliest due date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "dueOnOrBefore": {
+                    "description": "Latest due date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "team": {
+                    "description": "Team name (substring); any one matches. Omit for every team.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "party": {
+                    "description": "Party name (substring); any one matches. Omit for every party. Matches the same value the row reports as PartyName.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "isOverdue": {
+                    "description": "true = overdue only (past due and not yet complete); false = not overdue; omit for no filter on this. Same meaning as isOverdue on get_my_activities.",
+                    "type": "boolean",
+                    "default": null
+                  },
+                  "filingReference": {
+                    "description": "Statutory filing reference (substring); any one matches. Omit for all references. Only ever set on a statutory filing.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "filingPreparedOnOrAfter": {
+                    "description": "Earliest filing-prepared date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingPreparedOnOrBefore": {
+                    "description": "Latest filing-prepared date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingSubmittedOnOrAfter": {
+                    "description": "Earliest filing-submitted date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingSubmittedOnOrBefore": {
+                    "description": "Latest filing-submitted date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "entityOnly": {
+                    "description": "false (default) = span the entity AND its visible registrations, matching this tool's normal behaviour and the Activities tab; true = restrict to the entity's own activities only. The tab itself has no equivalent toggle.",
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_alternates",
+              "description": "List the appointments at an entity that are held by an alternate — Entity > People > Alternates. Read-only and\nfiltered to what the signed-in user may see.\n\nAn alternate stands in for one or more other appointees at the same entity, the principals. Each row here is\nthe ALTERNATE's own appointment, and `AlternateFor` names the principals that appointment stands in for. This\nis a subset of get_entity_appointments, which lists every appointment at the entity: use that tool for \"who\nholds office at X\" and this one for \"who is an alternate at X, and for whom\".\n\nPer row: Name (the alternate), EntityKubeRef (E| — this entity), IsEntityAccessible (true: it is the entity you\nasked about) and OfficerKubeRef (O| — the alternate, follow up with get_officer), OfficerAppointmentId,\nAppointmentType, IsDirector, AppointmentGrouping, AppointedOn,\nResignedOn, IdentifierCode, CorrespondenceAddress, ResidentialAddress, Nationality, Occupation,\nCountryOfResidency, DirectorshipType, DirectorshipStarted, DirectorshipLastRenewed, Notes — every one of these\ndescribes the ALTERNATE's own appointment.\n\n`AlternateFor` is a list, one entry per principal: Name, OfficerKubeRef (O|), IsOfficerAccessible,\nAppointmentStart, AppointmentEnd, ResignationNotes.\n\nTwo different date pairs, and they are easy to confuse — read this before answering a date question.\nAppointedOn / ResignedOn on the row are when the ALTERNATE's own appointment at the entity started and ended.\nAlternateFor[].AppointmentStart / AppointmentEnd are when the LINK to that one principal started and ended —\nthe period the alternate stood in for that person. They are independent: an alternate can hold one\nappointment while standing in for three principals over three different periods, and a link can end while\nthe appointment continues.\n\n`active` filters the alternate's OWN appointment (the row's ResignedOn), not any link: true, the DEFAULT, returns\nonly appointments that are not resigned; false returns those alongside the ended ones. There is no\nresigned-only setting, because the tab's checkbox offers none.\n\nA principal whose officer profile you cannot open is still listed, matching how Kube shows it as plain text\nrather than a link: the entry has a Name but NO OfficerKubeRef, carries IsOfficerAccessible: false, and\n`AlternateFor[].OfficerKubeRef` is named in that row's RedactedProperties. Such a principal cannot be\nfollowed up with get_officer — there is nothing to pass it. IsOfficerAccessible is true for a principal you can\nopen.\n\n`query` matches this entity's own name and the ALTERNATE's forenames and surname — the same columns the\ntab's keyword box searches, and NOT the principals named in AlternateFor; AND across whitespace tokens,\nsubstring, case-insensitive.\n\nPaged: Items plus Page, PageSize, TotalItems. Appointments held by an alternate whose officer profile is\noutside your access are omitted entirely. Withheld columns are nulled and named in each row's\nRedactedProperties; when the alternate-for block is withheld the whole `AlternateFor` list is absent and\nnamed there instead. Returns an empty page when this section is not returned to you on this entity, and\nequally when the entity simply has no alternates — a withheld section says so explicitly, so a bare empty page\nmeans nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "active": {
+                    "description": "Filters the alternate's own appointment: true (default) = active only, matching the tab's ticked active-only checkbox; false = also include resigned ones. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches this entity's name and the alternate's forenames and surname — NOT the principals named in AlternateFor. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_entity_udfs",
+              "description": "List the user defined field (UDF) values recorded against an entity — Entity > User defined fields.\nRead-only and filtered to what the signed-in user may see.\n\nUDFs are configured by each Kube customer, so their names and meanings differ from instance to instance and\nthere is no fixed set. NEVER assume a particular field exists or guess what one means from its name — read\nthe rows this tool returns and report them as they are.\n\nA field that is absent from these rows may mean any of several things, and this tool CANNOT tell them apart:\nno value has been recorded against the entity, the field is not configured for this entity at all, or you\nlack the grant for that field's scope. So report an absent field as \"not recorded, or not visible to you\" —\nnever state that the entity has no such field.\n\nThree scopes, matching Kube's three inner tabs:\n- `Field` — a standalone field. One row.\n- `Group` — a field inside a named group of related fields. One row per field, each carrying `Group`.\n- `List` — a table. One row per CELL, each carrying `List`, the 0-based `Row` number and the column's `Name`.\n  A 3-column list with 2 rows is therefore SIX rows, not two. Group on `List` AND `Row` together to\n  reassemble a table row: `Row` restarts at 0 in every list, so grouping on `Row` alone merges cells that\n  belong to different lists. List names are not guaranteed unique either.\n\nPer row: Scope, Group, List, Row, Name (the configured field name), Value (the value as text, dates ISO\nyyyy-MM-dd), DataType (the configured value type, e.g. Text, MultilineText, Date, Boolean, Integer,\nPercentage, CustomDropdown). A row with no Value has nothing recorded.\n\n`scope` accepts Field, Group or List, case-insensitive. Omit it to get all three scopes in one page, ordered\nScope, then List name, then Row, then field Name. Any other value is rejected as an error rather than\nsilently ignored.\n\nA UDF can be retired by a Kube administrator after values have been recorded against it. `active` (default\ntrue) hides those, matching the ticked active-only checkbox on the Field and Group tabs. List cells are never\nhidden by it, because the List tab has no such checkbox.\n\n`query` matches a DIFFERENT set of columns per scope, mirroring each tab's own keyword box exactly — a single\nblanket description would be wrong for two of the three:\n- `Field` — the field's own Name and Description. Does NOT match the recorded value.\n- `Group` — the containing GROUP's Name and Description only. Does NOT match the member field's own Name, and\n  does NOT match the recorded value.\n- `List` — nothing. The List tab's box searches only the cell's rendered value, which cannot be matched\n  server-side, so a List-scope row never matches a non-empty `query` — page the rows and read them instead.\nAND across whitespace tokens, substring, case-insensitive, within whichever of the above a row's scope allows.\n\nPaged: Items plus Page, PageSize, TotalItems. Each scope has its own permission, so a page can contain one\nscope and not another. Returns an empty page when you may see the entity but lack permission to view its\nuser defined fields — and equally when the entity simply has none recorded, which is common. A withheld\nsection says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "scope": {
+                    "description": "Restrict to one scope: 'Field', 'Group' or 'List' (case-insensitive). Omit for all three.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = fields and groups still in use only, matching the tab's ticked active-only checkbox; false = also include values whose field or group definition has since been retired. Never affects List scope, which has no such checkbox. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "query": {
+                    "description": "Free-text filter; AND across whitespace tokens; Contains, case-insensitive. Matches a different set of columns per scope: Field matches the field's Name and Description; Group matches the containing group's Name and Description only, not the member field's; List never matches, since only the cell value is searchable there and that cannot be matched server-side. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "search_officers",
+              "description": "Search Officer records (people and corporate officers holding positions such as director, secretary or\nPSC) in this Kube instance — the MCP counterpart of the Officers grid. Results are server-side filtered\nto records the signed-in user can see — no client-side filtering needed.\n\nPrefer search_parties for a quick name lookup across entities AND officers; use search_officers when you\nneed the Officers-grid filters below (appointed entity, registrar, appointment type, nationality, …) or\nan active-only officer listing.\n\nSearch tips:\n- `query` matches officer names — forenames, surname and former names. All words must match — `Jane Smith` requires both.\n- Do NOT include personal titles or honorifics (Mr, Mrs, Dr, Sir, etc.) in `query` — they are not part of\n  the searchable name fields, so including them reduces recall.\n- For appointed entity / registrar / country / appointment type / directorship type / nationality /\n  business unit / division / entity group / classification, use the matching parameter below; non-name\n  terms in `query` return zero results.\n- Every filter parameter takes a LIST, matching the grid's multi-select dropdowns: values OR within one\n  parameter, parameters AND across. `appointmentType: [\"Director\", \"Secretary\"]` finds either;\n  adding `country: [\"GB\"]` narrows both to GB.\n- Optional text filters are Contains, case-insensitive; `appointedEntity` takes E|-prefixed KubeRefs.\n- Combined appointment filters match the SAME appointment: `appointedEntity` + `appointmentType`\n  (and directorship type / country / business unit / division / entity group / classification) find\n  officers holding THAT role at THAT entity — someone who is only Secretary at the entity but Director\n  elsewhere does not match. Registrar and nationality are officer-profile filters, independent of\n  appointments.\n\nResult fields (one row per officer; null fields are omitted from JSON):\n- `KubeRef` — stable officer id, prefixed `O|` (e.g. `O|E993B7`). Follow up with get_officer,\n  get_officer_appointments or get_officer_roles.\n- `Name` — display name as the Officers grid shows it: `SURNAME, Forenames (Title)`.\n- `Nationality` — from the officer's preferred profile.\n- `DateOfBirth` — from the officer's preferred profile; the standard disambiguator when several\n  officers share a name.\n- `RedactedProperties` — names of fields withheld on that record; absent when nothing is withheld. A field\n  named there was withheld and may well hold a value, for any of several reasons this connector does not\n  report and you should not guess at. A null field NOT listed there simply has no recorded value.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "description": "Name search; AND across whitespace tokens; matches forenames, surname and former names. Omit titles/honorifics. Omit for all visible officers.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = only officers with an active profile; false = also include inactive officers. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 10, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 10
+                  },
+                  "appointedEntity": {
+                    "description": "Appointed entity KubeRefs, each E|-prefixed (e.g. ['E|6FE4BF']) — officers appointed to ANY of them.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "registrar": {
+                    "description": "Registrar holding the officer's profile (substring). Either the bare name ('Companies House') or the 'Name [Country]' form the Kube dropdown shows.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "country": {
+                    "description": "Appointed entity's registrar countries: full name (substring, e.g. 'United Kingdom') or ISO Alpha-2/3 code (exact, e.g. 'GB', 'GBR').",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "appointmentType": {
+                    "description": "Appointment types (e.g. ['Director', 'Secretary']).",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "directorshipType": {
+                    "description": "Directorship types.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "nationality": {
+                    "description": "Officer nationalities.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "businessUnit": {
+                    "description": "Appointed entity's business units.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "division": {
+                    "description": "Appointed entity's divisions.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "entityGroup": {
+                    "description": "Appointed entity's entity groups.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "classification": {
+                    "description": "Appointed entity's classifications.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  }
+                }
+              }
+            },
+            {
+              "name": "get_officer",
+              "description": "Get detail for a single officer (person) by their KubeRef (O|-prefixed, e.g. O|E993B7), filtered to what\nthe signed-in user may see. Find an officer's KubeRef first with search_parties.\n\nAn officer can hold several per-registrar profiles, so the result is person-level (KubeRef, Name, Active)\nplus a `Profiles` array — one entry per registrar profile. Each profile carries: Registrar, Country,\nJurisdiction, Type (Individual/Corporate), Status, IdentifierCode, AccessCategories, DateOfBirth,\nDateOfDeath, CountryOfBirth, Gender, Ethnicity, Nationality, CountryOfResidence, ResidentialAddress,\nCorrespondenceAddress, EmailAddress, ContactPhoneNumber, NiSsNumber, Occupation,\nConfidentialResidentialAddress.\n\nOther parts of an officer's record have their own tools: get_officer_appointments (the entities they are\nappointed to), get_officer_roles (entity-level service-role appointments such as auditor),\nget_officer_alternates (appointments held as an alternate), get_officer_external_appointments\n(appointments at companies outside this Kube instance), get_officer_committees (committees sat on),\nget_officer_contacts (contact records), get_officer_addresses (address book) and get_officer_udfs (user\ndefined field values).\n\nWithheld vs not-recorded: a field is null/absent either because no value is recorded, or because it was\nwithheld. Each profile's `RedactedProperties` lists the names of the fields that were withheld — each may\nwell hold a value, for any of several reasons this connector does not report and you should not guess at,\nso do not tell the user they lack a permission. A null field NOT listed there simply has no recorded value.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_appointments",
+              "description": "List an officer's appointments (the entities they are appointed to) — Officer > Officer interests >\nAppointments. Read-only and filtered to what the signed-in user may see.\n\nPer appointment: EntityKubeRef (E| — the linked entity, follow up with get_entity), IsEntityAccessible,\nOfficerKubeRef (O| — this officer), OfficerAppointmentId (stable appointment id), EntityName (the appointed-to\nentity's name), RegistrarForAppointments, EntityNumber, RegistrarStatus, Name (the appointee),\nAppointmentType, IsDirector (semantic directorship flag — filter on this, not the type name),\nAppointedOn, ResignedOn,\nAppointmentGrouping, IdentifierCode, CorrespondenceAddress, ResidentialAddress, Nationality, Occupation,\nCountryOfResidency, DirectorshipType, DirectorshipStarted, DirectorshipLastRenewed, Notes.\n\nA row may reference an entity you cannot open. It is still listed, matching how Kube shows that entity as\nplain text rather than a link: the row keeps its EntityName but has NO EntityKubeRef, carries\nIsEntityAccessible: false, and names EntityKubeRef, EntityNumber, RegistrarStatus and RegistrarForAppointments\n— all four nulled — in its RedactedProperties. Such a row cannot be followed up with get_entity, and\nthis tool returns nothing else about that entity. Every other column describes this officer's own appointment\nand is kept — but the per-column field permissions resolve against the appointed entity as well as this\nofficer, so on such a row the appointment's personal columns are commonly withheld too and named in the same\nRedactedProperties. EntityName, AppointmentType, IsDirector, OfficerKubeRef and OfficerAppointmentId carry no\nfield permission and stand either way. IsEntityAccessible is true for an entity you can open.\n\nPaged: Items plus Page, PageSize, TotalItems. Withheld fields are nulled and named in each row's\nRedactedProperties. Returns an empty page when this section is not returned to you for this officer, and\nequally when the officer simply holds no appointments — a withheld section says so explicitly, so a bare empty\npage means nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches the appointed entity's name and the appointee's forenames and surname. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = active appointments only, matching the tab's ticked active-only checkbox; false = also include resigned ones. A future-dated resignation still counts as active; a resignation with no date recorded counts as resigned now. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_roles",
+              "description": "List an officer's entity-level role appointments (service roles such as auditor or accountant) —\nOfficer > Officer interests > Roles. Read-only and filtered to what the signed-in user may see.\n\nPer role: Name (the entity the role is held at), EntityKubeRef (E| — that entity, follow up with get_entity),\nIsEntityAccessible, OfficerKubeRef (O| — this officer), RoleAppointmentType, AppointmentGrouping,\nAppointedFrom, AppointedTo.\n\nA row may reference an entity you cannot open. It is still listed, matching how Kube shows that entity as\nplain text rather than a link: the row keeps its Name — which IS that entity's name — but has NO\nEntityKubeRef, carries IsEntityAccessible: false, and names EntityKubeRef, nulled, in its RedactedProperties.\nSuch a row cannot be followed up with get_entity, and this tool returns nothing else about that\nentity. IsEntityAccessible is true for an entity you can open.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when this section is not returned to you\nfor this officer, and equally when the officer simply holds no roles — a withheld section says so explicitly,\nso a bare empty page means nothing is recorded.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches the entity's name (the row's Name) and this officer's forenames and surname — NOT the role type. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = active roles only, matching the tab's ticked active-only checkbox; false = also include ended ones. A future-dated end still counts as active; an ended role with no date recorded counts as ended now. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_alternates",
+              "description": "List the appointments an officer holds AS AN ALTERNATE — Officer > Officer interests > Alternates. Read-only\nand filtered to what the signed-in user may see.\n\nAn alternate stands in for one or more other appointees at the same entity, the principals. Each row here is\none of THIS officer's own appointments, and `AlternateFor` names the principals that appointment stands in\nfor. These are a STRICT subset of what get_officer_appointments returns — the appointments where this officer\nis the stand-in, less any at an entity you cannot open, which that tool lists and this one omits. Use that\ntool for \"where does X hold office\" and this one for \"where is X an alternate, and for whom\". It does NOT\nlist the officers who act as alternates FOR this officer — that is the other direction of the same link and\nthis tool does not return it.\n\nPer row: EntityKubeRef (E| — the entity the appointment is at, follow up with get_entity), IsEntityAccessible\n(whether that entity is one you can open), OfficerKubeRef (O| — this officer), OfficerAppointmentId,\nEntityName, RegistrarForAppointments, EntityNumber,\nRegistrarStatus, Name (this officer, the alternate), AppointmentType, IsDirector, AppointmentGrouping,\nAppointedOn, ResignedOn, IdentifierCode, CorrespondenceAddress, ResidentialAddress, Nationality, Occupation,\nCountryOfResidency, DirectorshipType, DirectorshipStarted, DirectorshipLastRenewed, Notes — every one of\nthese describes THIS officer's own appointment.\n\n`AlternateFor` is a list, one entry per principal: Name, OfficerKubeRef (O|), IsOfficerAccessible,\nAppointmentStart, AppointmentEnd, ResignationNotes.\n\nTwo different date pairs, and they are easy to confuse — read this before answering a date question.\nAppointedOn / ResignedOn on the row are when THIS officer's own appointment at the entity started and ended.\nAlternateFor[].AppointmentStart / AppointmentEnd are when the LINK to that one principal started and ended —\nthe period this officer stood in for that person. They are independent: an alternate can hold one\nappointment while standing in for three principals over three different periods, and a link can end while\nthe appointment continues.\n\n`active` filters this officer's OWN appointment (the row's ResignedOn), not any link: true, the DEFAULT, returns\nonly appointments that are not resigned; false returns those alongside the ended ones. There is no\nresigned-only setting, because the tab's checkbox offers none.\n\nAn appointment is listed only while at least one of its alternate links is still open — a principal the\nofficer has not resigned as alternate for — which is what the Kube UI shows. A link that HAS ended is still\nreported inside `AlternateFor` on a row that qualifies through another one.\n\nA principal whose officer profile you cannot open is still listed, matching how Kube shows it as plain text\nrather than a link: the entry has a Name but NO OfficerKubeRef, carries IsOfficerAccessible: false, and\n`AlternateFor[].OfficerKubeRef` is named in that row's RedactedProperties. Such a principal cannot be\nfollowed up with get_officer — there is nothing to pass it. IsOfficerAccessible is true for a principal you\ncan open.\n\nPaged: Items plus Page, PageSize, TotalItems. Appointments at entities outside your access are omitted\nentirely. Withheld columns are nulled and named in each row's RedactedProperties; when the alternate-for\nblock is withheld the whole `AlternateFor` list is absent and named there instead.\nReturns an empty page when this section is not returned to you for this officer — and an officer who\nsimply is not an alternate anywhere returns an empty page too, so an empty result does not by\nitself mean anything was withheld.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches the entity's name and this officer's forenames and surname — NOT the principals named in AlternateFor. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "Filters this officer's own appointment: true (default) = active only, matching the tab's ticked active-only checkbox; false = also include resigned ones. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_external_appointments",
+              "description": "List the appointments an officer holds at companies OUTSIDE this Kube instance — Officer > Officer interests >\nExternal appointments. Read-only and filtered to what the signed-in user may see.\n\nThese are directorships and other offices held at companies Kube does not manage, recorded either against a\nregistrar-sourced external party or as free text; use get_officer_appointments for the officer's appointments at\nthis instance's own entities, which is the other, non-overlapping half of where they hold office. This tool\nreturns no ref for the external company, so a row here cannot be followed up with get_entity.\n\nPer row: EntityName (the external company), Registrar (the register it is recorded with), CompanyNumber, Address\n(the external company's address, as a single line), EntityType (for example Listed, Private, Subsidiary, Not for\nprofit), Role (the office held, as free text — not one of this instance's configured appointment types),\nAppointedOn, ResignedOn, ResignationNotes.\n\n`active` filters on ResignedOn: true, the DEFAULT, returns only the unresigned rows; false returns those alongside\nthe resigned ones. There is no resigned-only setting, because the tab's checkbox offers none. Note the\ndefault order puts resigned rows first — the same convention as get_officer_committees, and the reverse of\nget_officer_alternates — then by external company name, then by AppointedOn.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the officer but lack\npermission to view their external appointment data. The converse does NOT hold: an officer who simply holds no\nappointments outside Kube returns an empty page too, so an empty result does not by itself mean anything was\nwithheld. Rows filed against an officer profile you cannot access are omitted entirely.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches the external company's name (EntityName) only — not the role, registrar or company number. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = active appointments only, matching the tab's ticked active-only checkbox; false = also include resigned ones. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_committees",
+              "description": "List the committees an officer sits on — Officer > Committees. Read-only and filtered to what the signed-in\nuser may see.\n\nA committee is a board committee (audit, remuneration, …) belonging to one of this instance's entities, and a\nrow here is this officer's membership of it. This is not an appointment: for the offices the officer holds use\nget_officer_appointments, get_officer_roles or get_officer_external_appointments.\n\nPer row: Name (the COMMITTEE's name), EntityName (the entity that committee belongs to), EntityKubeRef (E| —\nthat entity, follow up with get_entity), IsEntityAccessible, Role (Chairperson, Vice chair, Secretary,\nTreasurer, Member or Standing attendee), AppointedFrom, AppointedTo. Neither Name nor EntityName is the\nofficer's own name — this tool is already scoped to one officer, and it returns no name for them.\nAppointedFrom / AppointedTo are the dates of the MEMBERSHIP itself, the tab's \"Appointed from\" and \"Appointed\nto\" columns; do not read them as an appointment's appointed-on / resigned-on dates.\n\n`active` covers BOTH end dates, matching the tab's active-only checkbox: true returns only memberships that\nhave not ended AND whose committee has not ended; false returns every row where EITHER has ended — so a\nmembership with no end date on a closed committee is excluded by true and returned by false. true is the DEFAULT;\nfalse adds the ended and closed-committee rows rather than isolating them, as the tab's checkbox does.\nNote the default order puts ended and closed-committee rows first — the same convention as\nget_officer_external_appointments, and the reverse of get_officer_alternates — then by entity name, then by\ncommittee name.\n\nA row may reference an entity you cannot open. It is still listed, matching how Kube shows that entity as\nplain text rather than a link: the row keeps its Name and EntityName but has NO EntityKubeRef, carries\nIsEntityAccessible: false, and names EntityKubeRef in its RedactedProperties. Such a row cannot be followed up\nwith get_entity — there is no ref to pass — and this tool returns nothing else about that entity.\nIsEntityAccessible is true for an entity you can open.\n\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the officer but lack\npermission to view their committee data. The converse does NOT hold: an officer who simply sits on no\ncommittee returns an empty page too, so an empty result does not by itself mean anything was withheld.\nMemberships filed against an officer profile you cannot access are omitted entirely.\n\nInactive rows are EXCLUDED BY DEFAULT, matching the ticked active-only checkbox on the Kube tab this\nreflects. `TotalItems` therefore counts active rows only, and is NOT how many exist on the record.\nSo do not present a default-filtered count as a total (\"this entity has 4 registrations\") — either say the\ncount is of active rows, or re-query for the rest. The filter parameter's own description says how.\nLeave `active` unset for that default; send it only to ask for the inactive rows as well.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter; AND across whitespace tokens; Contains, case-insensitive; matches the COMMITTEE's name and its entity's name — the two names a row carries. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = only memberships where neither the membership nor its committee has ended, matching the tab's ticked active-only checkbox; false = also include the rows where either has ended. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_contacts",
+              "description": "List the contact records held against an officer — Officer > Contacts. Read-only and filtered to what the\nsigned-in user may see.\n\nA contact record is a named point of contact filed against the officer (for example an assistant or an\nadviser), with its own phone, email and address details. These are NOT the officer's own email address or\ncontact phone number — those are profile fields already returned by get_officer — and they are not\nappointments; for the entities the officer holds office at use get_officer_appointments or\nget_officer_roles. An officer can hold several per-registrar profiles and each keeps its own contacts, so\nthe rows from every profile you may see are returned together.\n\nPer contact: ContactType (the contact type configured in this Kube instance), Name, Details, Telephone,\nEmailAddress, Address (the contact's own address, as a single line).\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the officer but lack\npermission to view their contact data, and equally when the officer simply has no contact records — a withheld\nsection says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches ContactType, Name, Details, Telephone and EmailAddress — not the address. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_addresses",
+              "description": "List an officer's address book — Officer > Addresses. Read-only and filtered to what the signed-in user may\nsee.\n\nThese are the officer's additional named address records (for example a previous address or an alternative\ncorrespondence address), each filed under its own AddressName. They are NOT the officer's residential or\ncorrespondence address — those are profile fields already returned by get_officer, so do not call this tool\nfor them. An officer can hold several per-registrar profiles and each keeps its own address book, so the\nrows from every profile you may see are returned together.\n\nPer address: AddressName, then the address components BuildingNameNumber, Street, Area, PostTown,\nCountyRegion, Postcode, Country, plus EffectiveFrom (the date the address takes effect, when recorded).\nPaged: Items plus Page, PageSize, TotalItems. Returns an empty page when you may see the officer but lack\npermission to view their address data, and equally when the officer simply has no additional address\nrecords — a withheld section says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Free-text filter, matching the tab's keyword box; AND across whitespace tokens; Contains, case-insensitive; matches AddressName and every address component (BuildingNameNumber, Street, Area, PostTown, CountyRegion, Postcode, Country). Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "get_officer_udfs",
+              "description": "List the user defined field (UDF) values recorded against an officer — Officer > User defined fields.\nRead-only and filtered to what the signed-in user may see.\n\nUDFs are configured by each Kube customer, so their names and meanings differ from instance to instance and\nthere is no fixed set. NEVER assume a particular field exists or guess what one means from its name — read\nthe rows this tool returns and report them as they are.\n\nA field that is absent from these rows may mean any of several things, and this tool CANNOT tell them apart:\nno value has been recorded against the officer, the field is not configured for this officer at all, or you\nlack the grant for that field's scope. So report an absent field as \"not recorded, or not visible to you\" —\nnever state that the officer has no such field.\n\nThree scopes, matching Kube's three inner tabs:\n- `Field` — a standalone field. One row.\n- `Group` — a field inside a named group of related fields. One row per field, each carrying `Group`.\n- `List` — a table. One row per CELL, each carrying `List`, the 0-based `Row` number and the column's `Name`.\n  A 3-column list with 2 rows is therefore SIX rows, not two. Group on `List` AND `Row` together to\n  reassemble a table row: `Row` restarts at 0 in every list, so grouping on `Row` alone merges cells that\n  belong to different lists. List names are not guaranteed unique either.\n\nPer row: Scope, Group, List, Row, Name (the configured field name), Value (the value as text, dates ISO\nyyyy-MM-dd), DataType (the configured value type, e.g. Text, MultilineText, Date, Boolean, Integer,\nPercentage, CustomDropdown). A row with no Value has nothing recorded.\n\n`scope` accepts Field, Group or List, case-insensitive. Omit it to get all three scopes in one page, ordered\nScope, then List name, then Row, then field Name. Any other value is rejected as an error rather than\nsilently ignored.\n\nA UDF can be retired by a Kube administrator after values have been recorded against it. `active` (default\ntrue) hides those, matching the ticked active-only checkbox on the Field and Group tabs. List cells are never\nhidden by it, because the List tab has no such checkbox.\n\n`query` matches a DIFFERENT set of columns per scope, mirroring each tab's own keyword box exactly — a single\nblanket description would be wrong for two of the three:\n- `Field` — the field's own Name and Description. Does NOT match the recorded value.\n- `Group` — the containing GROUP's Name and Description only. Does NOT match the member field's own Name, and\n  does NOT match the recorded value.\n- `List` — nothing. The List tab's box searches only the cell's rendered value, which cannot be matched\n  server-side, so a List-scope row never matches a non-empty `query` — page the rows and read them instead.\nAND across whitespace tokens, substring, case-insensitive, within whichever of the above a row's scope allows.\n\nPaged: Items plus Page, PageSize, TotalItems. Each scope has its own permission, so a page can contain one\nscope and not another. Returns an empty page when you may see the officer but lack permission to view their\nuser defined fields — and equally when the officer simply has none recorded, which is common. A withheld\nsection says so explicitly, so a bare empty page means nothing is recorded.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Officer KubeRef, O|-prefixed (e.g. 'O|E993B7').",
+                    "type": "string"
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "scope": {
+                    "description": "Restrict to one scope: 'Field', 'Group' or 'List' (case-insensitive). Omit for all three.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "active": {
+                    "description": "true (default) = fields and groups still in use only, matching the tab's ticked active-only checkbox; false = also include values whose field or group definition has since been retired. Never affects List scope, which has no such checkbox. OMIT this parameter for the normal case. Send `false` only when the user has specifically asked about inactive records.",
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "query": {
+                    "description": "Free-text filter; AND across whitespace tokens; Contains, case-insensitive. Matches a different set of columns per scope: Field matches the field's Name and Description; Group matches the containing group's Name and Description only, not the member field's; List never matches, since only the cell value is searchable there and that cannot be matched server-side. It never matches a row's Value, so do not use it to look for a recorded value — page the rows and read them. Omit for every row.",
+                    "type": "string",
+                    "default": null
+                  }
+                },
+                "required": [
+                  "kubeRef"
+                ]
+              }
+            },
+            {
+              "name": "list_entity_fields",
+              "description": "List the entity fields queryable through this connector, each with the display name (label) it has in\nTHIS Kube instance's UI. Labels are instance-specific and can change over time, so resolve a user's\nwording here rather than assuming — e.g. a user asking for the \"cluster\" maps to the field whose Label\nis \"Cluster\" and whose Key is \"BusinessUnit\". The Key values are stable and are what the data tools\n(get_entity, get_entity_appointments, get_entity_dates, get_entity_roles, get_entity_contacts,\nget_entity_addresses, get_entity_meetings, get_entity_registrations, get_entity_activities,\nget_entity_alternates, get_entity_udfs) actually return.\n\nReturns a `Fields` array; per field: Key (stable JSON key, e.g. 'BusinessUnit' or collection form\n'TradingNames[].Type'), Label (this instance's UI name), Group (Profile, Details, Trading names, Dates,\nAppointments, Roles, …), DataType, and IsCollection. Read-only; the catalogue is not filtered field by field —\nper-field visibility is enforced by the data tools when values are returned. It is returned only to a caller\nwho can open this instance's entity screens: a caller without the necessary Kube role gets an error saying so,\nnot an empty or partial catalogue.\n\nCustom / user-defined field names are NOT catalogue keys. The `User defined fields` entries here describe\nthe row shape only, not this instance's UDF names — those are row DATA returned by get_entity_udfs under\neach row's `Name`. So resolve a user's wording for a custom field by calling get_entity_udfs and matching\non `Name`; not finding it here does not mean the entity has no such field.\n\nCall this ONCE per session, the first time you use any tool in this family, and REUSE the catalogue it\nreturns for every later call — the labels and groupings do not change mid-session. Calling it again is\nwasted work.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            {
+              "name": "list_officer_fields",
+              "description": "List the officer fields queryable through this connector, each with the display name (label) it has in\nTHIS Kube instance's UI. Labels are instance-specific and can change over time, so resolve a user's wording\nhere rather than assuming. The Key values are stable and are what the data tools (get_officer,\nget_officer_appointments, get_officer_alternates, get_officer_roles, get_officer_addresses,\nget_officer_contacts, get_officer_external_appointments, get_officer_committees, get_officer_udfs)\nactually return.\n\nReturns a `Fields` array; per field: Key (stable JSON key, e.g. 'Profiles[].Nationality'), Label (this\ninstance's UI name), Group (Officer details, Appointments, Alternates, Roles, Addresses, Contacts, External\nappointments, Committees, User defined fields), DataType, and\nIsCollection. Read-only; the catalogue is not filtered field by field — per-field visibility is enforced by\nthe data tools when values are returned. It is returned only to a caller who can open this instance's officer\nscreens: a caller without the necessary Kube role gets an error saying so, not an empty or partial catalogue.\n\nCustom / user-defined field names are NOT catalogue keys. The `User defined fields` entries here describe\nthe row shape only, not this instance's UDF names — those are row DATA returned by get_officer_udfs under\neach row's `Name`. So resolve a user's wording for a custom field by calling get_officer_udfs and matching\non `Name`; not finding it here does not mean the officer has no such field.\n\nCall this ONCE per session, the first time you use any tool in this family, and REUSE the catalogue it\nreturns for every later call — the labels and groupings do not change mid-session. Calling it again is\nwasted work.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            {
+              "name": "get_my_activities",
+              "description": "List the signed-in user's own activity workload — the Personal and Teams scope of the Activities page.\nRead-only and filtered to what that user may see.\n\nReturns ONLY activities owned by the signed-in user, by one of their teams, or by KAIA. A colleague's\nactivity outside their teams is not returned, even at an entity they can open. For everything recorded\nagainst one entity whoever owns it — the entity's own Activities tab, including activities on its\nregistrations, and with category and due-date filters — use get_entity_activities instead. Pick this tool\nonly when the question is about the caller's own work (\"MY confirmation statements\", \"what's outstanding\nfor me?\"); pick get_entity_activities whenever the question is about a named company's activities.\n\nUse this to find the activity to act on before completing one.\n\nTwo modes:\n- **One entity** — pass kubeRef.\n- **Across every entity the user can see** — omit kubeRef. This answers \"which of my confirmation statements\n  are open?\" without a company being named, and with no filters at all it is the caller's whole open\n  workload.\n\nPer activity, the columns Entity > Activities shows, by that grid's own rules:\n- Name — the activity ('Activity' in the grid), and ActivityId, its stable id.\n- ActivityType ('Type', e.g. 'Confirmation statement', 'Annual return', 'Accounts') and\n  ActivityCategory ('Category'; 'Filing' for activities that have only a filing type).\n- PartyName, PartyType and PartyKubeRef ('Party') — what the activity is on. Usually the entity, but an\n  activity can hang off an officer or an external party, and PartyType says which\n  ('Entity', 'Registration', 'Officer', 'Corporate Officer', 'External Party Individual',\n  'External Party Entity'). PartyKubeRef is prefixed: E| takes straight to the entity tools, O| to the\n  officer tools, P| identifies an external party (no tool reads those yet).\n- TeamName ('Team') and ResponsibleOwnerName ('Owner'), with ResponsibleOwnerIsCaller — whether that owner\n  is the signed-in user, because a list mixing their own work with their teams' must say which rows are\n  which.\n- DueOn ('Due on') and IsComplete ('Complete').\n- PeriodStart and PeriodEnd — the period the activity covers; for a confirmation statement PeriodEnd is\n  the 'made up to' date.\n- EntityName and EntityKubeRef — the company the row belongs to, which is what makes a cross-entity\n  list readable and actionable, and the same as the party for an entity activity. Absent in one case:\n  an activity whose FIRST party is an officer or external party, where PartyName is the answer instead.\n\nConfirmation-statement rows also carry Cs01Eligibility { Eligible, ReasonCodes } — whether KAIA could\ncomplete that activity for this user, without the registrar checks, which run only when a completion is\nactually attempted. Do not present ReasonCodes verbatim; they are for the guided completion flow.\n\nOpen activities only by default; pass includeCompleted = true to see completed ones as well. That default is\nthe Activities page's own active-only gate, so TotalItems counts open activities only and is NOT how many\nactivities the user has — either say the count is of open work, or re-query with includeCompleted = true.\n\nThe filter parameters match the Activities page's own filter dropdowns. Prefer them over paging through\neverything and filtering yourself. Every one is optional; supplying several AND-s them together.\n- team, party, activityCategory, activityType, jurisdiction and filingReference take one or more SUBSTRING\n  values, case-insensitive, and the values within one filter OR together (\"my Filing OR Compliance\n  activities\"). A short value can match more than intended: read the values off returned rows to narrow a\n  filter that matches too much.\n- status takes one or more of 'Open', 'Overdue' or 'Complete' (case-insensitive), OR'd together — the same\n  three the page's Status column and its dashboard cards use. Anything else is an error naming the three, not\n  an empty page. An activity is Complete when it is completed, otherwise Overdue when its due date has\n  passed, otherwise Open.\n- isOverdue / isOpen / isComplete are the page's separate yes/no filters for those same three states.\n  isComplete means what it does on get_entity_activities. They AND with includeCompleted, so asking for\n  completed work needs includeCompleted = true as well — otherwise the open-only default has already\n  excluded every row isComplete = true could match.\n- The date filters come in inclusive from/to pairs, applied to the date the name says: startOnOrAfter /\n  startOnOrBefore (period start), endOnOrAfter / endOnOrBefore (period end), dueOnOrAfter /\n  dueOnOrBefore, reminderOnOrAfter / reminderOnOrBefore, and filingPreparedOnOrAfter /\n  filingPreparedOnOrBefore and filingSubmittedOnOrAfter / filingSubmittedOnOrBefore for a filing's\n  prepared and submitted dates. Send one for an open-ended bound or both for a window.\n  These are DATES, not date-times — send 'YYYY-MM-DD'. The whole of a bounding day is included at both ends,\n  so the window is never narrower than the dates you asked for, and an activity with no date recorded in\n  that column is excluded by either bound.\n- party and jurisdiction read the same consolidated party record the page's columns do, so an activity\n  with no party recorded is excluded by either.\n\nPaged: Items plus Page, PageSize, TotalItems.\n\nPaged: `Items` is one page; `TotalItems` is the total match count.\nA pure count (\"how many …\") needs only `TotalItems` from page 1.\nFor the complete set (summary, aggregate, comparison, anything over \"all\"), page with `pageSize` 100 (the max), incrementing `page`, until you have all `TotalItems` items BEFORE answering — one page is not a sufficient basis.\nWhen `TotalItems` is large, prefer narrowing with the filter parameters; page everything only when the complete set is genuinely required.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "kubeRef": {
+                    "description": "Entity KubeRef, E|-prefixed (e.g. 'E|6FE4BF'). Omit to search every entity the user can see.",
+                    "type": "string",
+                    "default": null
+                  },
+                  "activityType": {
+                    "description": "Activity-type name (substring, case-insensitive; e.g. 'Confirmation statement'); any one matches. Omit for all types.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "includeCompleted": {
+                    "description": "true to include completed activities as well; default false (open activities only), matching the active-only gate the Activities page applies. This is that gate, NOT the Complete filter: `isComplete`, `isOpen` and `status` AND with it, so asking for completed work needs includeCompleted = true as well.",
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "page": {
+                    "description": "1-based; default 1.",
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "pageSize": {
+                    "description": "Default 25, max 100. Use 100 when retrieving the full result set.",
+                    "type": "integer",
+                    "default": 25
+                  },
+                  "team": {
+                    "description": "Team name (substring, case-insensitive); any one matches. Omit for all teams.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "party": {
+                    "description": "Party name (substring, case-insensitive) — the Party column, usually the entity. Any one matches; omit for all parties.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "activityCategory": {
+                    "description": "Activity-category name (substring, case-insensitive; e.g. 'Filing'); any one matches. Omit for all categories.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "jurisdiction": {
+                    "description": "Jurisdiction name (substring, case-insensitive; e.g. 'England and Wales'); any one matches. Omit for all jurisdictions.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "status": {
+                    "description": "Activity status: 'Open', 'Overdue' or 'Complete'; any one matches. Omit for all statuses.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "filingReference": {
+                    "description": "Filing reference (substring, case-insensitive); any one matches. Omit for all filings.",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": null
+                  },
+                  "startOnOrAfter": {
+                    "description": "Earliest period start, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "startOnOrBefore": {
+                    "description": "Latest period start, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "endOnOrAfter": {
+                    "description": "Earliest period end, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "endOnOrBefore": {
+                    "description": "Latest period end, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "dueOnOrAfter": {
+                    "description": "Earliest due date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "dueOnOrBefore": {
+                    "description": "Latest due date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "reminderOnOrAfter": {
+                    "description": "Earliest reminder date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "reminderOnOrBefore": {
+                    "description": "Latest reminder date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingPreparedOnOrAfter": {
+                    "description": "Earliest filing prepared date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingPreparedOnOrBefore": {
+                    "description": "Latest filing prepared date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingSubmittedOnOrAfter": {
+                    "description": "Earliest filing submitted date, inclusive; omit for no lower bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "filingSubmittedOnOrBefore": {
+                    "description": "Latest filing submitted date, inclusive; omit for no upper bound.",
+                    "type": "string",
+                    "format": "date",
+                    "default": null
+                  },
+                  "isOverdue": {
+                    "description": "true = overdue only (past due and not completed), false = everything else. Omit to not filter on being overdue.",
+                    "type": "boolean",
+                    "default": null
+                  },
+                  "isOpen": {
+                    "description": "true = open only (not completed), false = completed only. Omit to not filter on being open.",
+                    "type": "boolean",
+                    "default": null
+                  },
+                  "isComplete": {
+                    "description": "true = completed only, false = outstanding only. Omit to not filter on completion. Same meaning as isComplete on get_entity_activities. AND-ed with includeCompleted, so completed activities need includeCompleted = true as well.",
+                    "type": "boolean",
+                    "default": null
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "run_for_functions": [
+        "search_parties",
+        "search_entities",
+        "get_entity",
+        "get_entity_appointments",
+        "get_entity_dates",
+        "get_entity_roles",
+        "get_entity_contacts",
+        "get_entity_addresses",
+        "get_entity_meetings",
+        "get_entity_registrations",
+        "get_entity_activities",
+        "get_entity_alternates",
+        "get_entity_udfs",
+        "search_officers",
+        "get_officer",
+        "get_officer_appointments",
+        "get_officer_roles",
+        "get_officer_alternates",
+        "get_officer_external_appointments",
+        "get_officer_committees",
+        "get_officer_contacts",
+        "get_officer_addresses",
+        "get_officer_udfs",
+        "list_entity_fields",
+        "list_officer_fields",
+        "get_my_activities"
+      ]
     }
   ]
 }

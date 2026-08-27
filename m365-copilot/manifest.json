@@ -1,7 +1,7 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.18/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.18",
-  "version": "1.0.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.23/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.23",
+  "version": "1.2.0",
   "id": "f37c45c0-1c93-41c9-bbe1-71c908f2ad25",
   "developer": {
     "name": "Kuberno Limited",
@@ -14,8 +14,8 @@
     "full": "Kube by Kuberno"
   },
   "description": {
-    "short": "Search and read your Kube entities, officers and appointments.",
-    "full": "Connect Microsoft 365 Copilot to your Kube corporate-registry and entity-management platform, published by Kuberno. This agent lets Copilot search and read your organisation's entities, officers, and their appointments, compliance dates and roles — scoped to what your Kube user is permitted to see. It is strictly read-only and honours Kube's per-user access permissions and field-level redaction."
+    "short": "Search and read your Kube entities, officers and the records held on them.",
+    "full": "Connect Microsoft 365 Copilot to your Kube corporate-registry and entity-management platform, published by Kuberno. This agent lets Copilot search and read your organisation's entities and officers, along with the records held on them — an entity's or officer's appointments, roles, contacts, addresses, alternates and user defined fields, an entity's compliance dates, meetings, registrations and activities, and an officer's committees and external appointments — scoped to what your Kube user is permitted to see. It is strictly read-only and honours Kube's per-user access permissions and field-level redaction."
   },
   "accentColor": "#550098",
   "icons": {
