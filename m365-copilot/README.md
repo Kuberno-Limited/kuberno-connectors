@@ -25,7 +25,9 @@ Download **`kube-copilot.zip`** from the latest release:
 
 <https://github.com/Kuberno-Limited/kuberno-connectors/releases/latest/download/kube-copilot.zip>
 
-Then either sideload it (Microsoft 365 Copilot → **Agents** → **Add agents** → **Upload custom agent**) or hand the package to your Microsoft 365 admin to publish to your organisation. Enable it and complete the Kube sign-in when prompted.
+Uploading the agent is an admin task. Hand the package to an **AI Administrator** or **Global Administrator**, who deploys it from the [Microsoft 365 admin center](https://admin.cloud.microsoft/#/agents/all): click **Add Agent**, upload the zip file, and select the users who will be able to install the app.
+
+Once it is deployed, Kube appears under **Built by your org** in Microsoft 365 Copilot. Complete the Kube sign-in the first time you open it.
 
 ## Example prompts
 
