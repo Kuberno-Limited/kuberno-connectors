@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+- Fix `icon.png`. The file had extra data after the end of the image, so Anthropic's plugin directory couldn't inspect it and held the plugin for review.
+
 ## 1.4.0
 - Add the plugin's icon, and links to its documentation, support, privacy policy and terms of service, for its listing in Anthropic's plugin directory. These fields only affect the directory listing, so the plugin works as before.
 
